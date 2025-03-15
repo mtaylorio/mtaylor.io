@@ -8,7 +8,7 @@ jobs:
     name: "Build Source"
     runs-on: "mtaylorio-runners-k8s"
     container:
-      image: "images.mtaylor.io/elm:latest"
+      image: "images.home.mtaylor.io/elm:latest"
     steps:
     - name: "Checkout"
       uses: "actions/checkout@v4"
