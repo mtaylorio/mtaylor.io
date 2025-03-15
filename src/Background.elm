@@ -13,7 +13,7 @@ background palette dimensions =
     svg
         [ width (fromInt dimensions.width)
         , height (fromInt dimensions.height)
-        , style "display: float; position: absolute; top: 0; left: 0; z-index: -1;"
+        , style "position: absolute; top: 0; left: 0; z-index: -1;"
         ]
         [ rect
             [ width (fromInt dimensions.width)
