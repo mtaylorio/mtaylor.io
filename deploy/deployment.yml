@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mtaylor-io
+spec:
+  template:
+    spec:
+      containers:
+      - name: web
+        image: images.home.mtaylor.io/mtaylor.io
+        ports:
+        - name: http
+          protocol: TCP
+          containerPort: 80

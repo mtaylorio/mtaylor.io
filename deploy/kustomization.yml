@@ -1,0 +1,8 @@
+images:
+- name: images.home.mtaylor.io/mtaylor.io
+  newTag: elm-rewrite
+commonLabels:
+  app: mtaylor-io
+resources:
+- deployment.yml
+- service.yml
