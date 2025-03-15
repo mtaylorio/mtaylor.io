@@ -31,11 +31,21 @@ background model palette dimensions =
 backgroundLines :
   Bool -> Bool -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
 backgroundLines top hide count palette dimensions =
-  generateLines top hide count count palette dimensions
+  backgroundLines_ top hide count count palette dimensions
 
 
-generateLine : Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> Svg msg
-generateLine top hide n total palette dimensions =
+backgroundLines_ :
+  Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
+backgroundLines_ top hide n total palette dimensions =
+  if n == 0 then
+    []
+  else
+    ( "line-" ++ fromInt n, backgroundLine top hide n total palette dimensions )
+    :: backgroundLines_ top hide (n - 1) total palette dimensions
+
+
+backgroundLine : Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> Svg msg
+backgroundLine top hide n total palette dimensions =
   if top then
     line
       [ x1 (fromInt 0)
@@ -54,16 +64,6 @@ generateLine top hide n total palette dimensions =
       , style (lineStyle hide palette)
       ]
       []
-
-
-generateLines :
-  Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
-generateLines top hide n total palette dimensions =
-  if n == 0 then
-    []
-  else
-    ( "line-" ++ fromInt n, generateLine top hide n total palette dimensions )
-    :: generateLines top hide (n - 1) total palette dimensions
 
 
 lineStyle : Bool -> ColorPalette -> String
