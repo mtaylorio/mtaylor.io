@@ -1,31 +1,32 @@
 module Main exposing (main)
 
 import Browser
+import Browser.Dom exposing (getViewport)
+import Browser.Events
 import Browser.Navigation
 import Html exposing (Html, button, div, h1, h3, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
+import Task exposing (Task)
 import Url exposing (Url)
 
-
-type alias ColorPalette =
-  { backgroundColor : String
-  , foregroundColor : String
-  , secondaryBackgroundColor : String
-  , secondaryForegroundColor : String
-  }
+import Background exposing (background)
+import ColorPalette exposing (ColorPalette)
+import Dimensions exposing (Dimensions)
 
 
 type alias Model =
   { title : String
   , headline : String
   , palette : ColorPalette
+  , dimensions : Dimensions
   }
 
 
 type Msg
   = Noop
   | SetPalette ColorPalette
+  | WindowResize Int Int
 
 
 defaultPalette : ColorPalette
@@ -39,7 +40,11 @@ defaultPalette =
 
 init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init _ _ _ =
-  ( initModel, Cmd.none )
+  ( initModel
+  , Task.perform
+      (\w -> WindowResize (round w.viewport.width) (round w.viewport.height))
+      Browser.Dom.getViewport
+  )
 
 
 initModel : Model
@@ -47,6 +52,7 @@ initModel =
   { title = "Mike Taylor"
   , headline = "Software Engineer"
   , palette = defaultPalette
+  , dimensions = { width = 0, height = 0 }
   }
 
 
@@ -69,6 +75,8 @@ update msg model =
       ( model, Cmd.none )
     SetPalette palette ->
       ( { model | palette = palette }, Cmd.none )
+    WindowResize width height ->
+      ( { model | dimensions = { width = width, height = height } }, Cmd.none )
 
 
 view : Model -> Browser.Document Msg
@@ -80,13 +88,13 @@ view model =
 
 mainView : Model -> List (Html Msg)
 mainView model =
-  [ div
+  [ background model.palette model.dimensions
+  , div
       [ style "width" "100vw"
       , style "height" "100vh"
       , style "display" "flex"
       , style "flex-direction" "column"
       , style "color" model.palette.foregroundColor
-      , style "background-color" model.palette.backgroundColor
       ]
       [ h1
           [ style "margin-top" "10px"
@@ -100,7 +108,6 @@ mainView model =
           , style "margin-bottom" "0"
           , style "margin-left" "10px"
           , style "margin-right" "0"
-          , style "color" model.palette.secondaryForegroundColor
           ]
           [ text model.headline ]
       ]
@@ -108,15 +115,13 @@ mainView model =
 
 
 onUrlRequest : Browser.UrlRequest -> Msg
-onUrlRequest _ =
-  Noop
+onUrlRequest _ = Noop
 
 
 onUrlChange : Url -> Msg
-onUrlChange _ =
-  Noop
+onUrlChange _ = Noop
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-  Sub.none
+  Browser.Events.onResize WindowResize
