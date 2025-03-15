@@ -8,3 +8,4 @@ type Msg
   = Noop
   | SetPalette ColorPalette
   | WindowResize Dimensions
+  | ToggleBackground

@@ -6,12 +6,12 @@ import Html.Attributes exposing (style)
 
 import Background exposing (background)
 import Model exposing (Model)
-import Msg exposing (Msg)
+import Msg exposing (Msg(..))
 
 
 body : Model -> List (Html Msg)
 body model =
-  [ background model.palette model.dimensions
+  [ background model.background model.palette model.dimensions
   , div
       [ style "width" "100vw"
       , style "height" "100vh"
@@ -19,6 +19,7 @@ body model =
       , style "justify-content" "center"
       , style "align-items" "center"
       , style "flex-direction" "column"
+      , style "font-family" "Verdana, sans-serif"
       , style "color" model.palette.foregroundColor
       ]
       [ h1

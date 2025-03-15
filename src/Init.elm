@@ -2,6 +2,7 @@ module Init exposing (init)
 
 import Browser.Dom
 import Browser.Navigation
+import Platform.Cmd exposing (batch)
 import Url exposing (Url)
 import Task exposing (Task)
 
@@ -25,17 +26,21 @@ model =
   , headline = "Software Engineer"
   , palette = palette
   , dimensions = { width = 0, height = 0 }
+  , background = { hide = True }
   }
 
 
 init : () -> Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init _ _ _ =
   ( model
-  , Task.perform
-      (\w -> WindowResize
-        { width = round w.viewport.width
-        , height = round w.viewport.height
-        }
-      )
-      Browser.Dom.getViewport
+  , batch
+    [ Task.perform
+        (\w -> WindowResize
+          { width = round w.viewport.width
+          , height = round w.viewport.height
+          }
+        )
+        Browser.Dom.getViewport
+    , Task.perform (always ToggleBackground) (Task.succeed ())
+    ]
   )

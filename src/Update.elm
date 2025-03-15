@@ -13,3 +13,10 @@ update msg model =
       ( { model | palette = palette }, Cmd.none )
     WindowResize dimensions ->
       ( { model | dimensions = dimensions }, Cmd.none )
+    ToggleBackground ->
+      let
+        background = model.background
+      in
+        ( { model | background = { background | hide = not background.hide } }
+        , Cmd.none
+        )
