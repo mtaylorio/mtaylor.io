@@ -23,47 +23,54 @@ background model palette dimensions =
         , style ("fill: " ++ palette.backgroundColor)
         ]
         []
-    , node "g" [] (backgroundLines True model.hide 50 palette dimensions)
-    , node "g" [] (backgroundLines False model.hide 50 palette dimensions)
+    , node "g" [] (backgroundLines True True model.hide 50 palette dimensions)
+    , node "g" [] (backgroundLines True False model.hide 50 palette dimensions)
+    , node "g" [] (backgroundLines False True model.hide 50 palette dimensions)
+    , node "g" [] (backgroundLines False False model.hide 50 palette dimensions)
     ]
 
 
+backgroundLine :
+  Bool -> Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> Svg msg
+backgroundLine top left hide n total palette dimensions =
+  line
+    [ x1 (fromInt (lineCoordinate False (not left) n total dimensions.width))
+    , y1 (fromInt (lineCoordinate True top n total dimensions.height))
+    , x2 (fromInt (lineCoordinate True (not left) n total dimensions.width))
+    , y2 (fromInt (lineCoordinate False (not top) n total dimensions.height))
+    , style (lineStyle hide palette)
+    ]
+    []
+
+
 backgroundLines :
-  Bool -> Bool -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
-backgroundLines top hide count palette dimensions =
-  backgroundLines_ top hide count count palette dimensions
+  Bool -> Bool -> Bool -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
+backgroundLines top left hide total palette dimensions =
+  backgroundLines_ top left hide total total palette dimensions
 
 
 backgroundLines_ :
-  Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
-backgroundLines_ top hide n total palette dimensions =
+  Bool -> Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> List (String, Svg msg)
+backgroundLines_ top left hide n total palette dimensions =
   if n == 0 then
     []
   else
-    ( "line-" ++ fromInt n, backgroundLine top hide n total palette dimensions )
-    :: backgroundLines_ top hide (n - 1) total palette dimensions
+    ( "line-" ++ fromInt n, backgroundLine top left hide n total palette dimensions )
+    :: backgroundLines_ top left hide (n - 1) total palette dimensions
 
 
-backgroundLine : Bool -> Bool -> Int -> Int -> ColorPalette -> Dimensions -> Svg msg
-backgroundLine top hide n total palette dimensions =
-  if top then
-    line
-      [ x1 (fromInt 0)
-      , y1 (fromInt (n * dimensions.height // total))
-      , x2 (fromInt (dimensions.width - (n * dimensions.width // total)))
-      , y2 (fromInt 0)
-      , style (lineStyle hide palette)
-      ]
-      []
+lineCoordinate : Bool -> Bool -> Int -> Int -> Int -> Int
+lineCoordinate iterated reversed n total dimension =
+  if iterated then
+    if reversed then
+      dimension - (n * dimension // total)
+    else
+      n * dimension // total
   else
-    line
-      [ x1 (fromInt dimensions.width)
-      , y1 (fromInt (n * dimensions.height // total))
-      , x2 (fromInt (dimensions.width - (n * dimensions.width // total)))
-      , y2 (fromInt dimensions.height)
-      , style (lineStyle hide palette)
-      ]
-      []
+    if reversed then
+      dimension
+    else
+      0
 
 
 lineStyle : Bool -> ColorPalette -> String

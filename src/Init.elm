@@ -13,7 +13,7 @@ import Msg exposing (Msg(..))
 
 palette : ColorPalette
 palette =
-  { backgroundColor = "#222831"
+  { backgroundColor = "#000000"
   , foregroundColor = "#EEEEEE"
   , secondaryBackgroundColor = "#393E46"
   , secondaryForegroundColor = "#00ADB5"
