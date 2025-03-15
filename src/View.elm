@@ -16,6 +16,8 @@ body model =
       [ style "width" "100vw"
       , style "height" "100vh"
       , style "display" "flex"
+      , style "justify-content" "center"
+      , style "align-items" "center"
       , style "flex-direction" "column"
       , style "color" model.palette.foregroundColor
       ]
