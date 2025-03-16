@@ -1,4 +1,4 @@
-module Background.Egg exposing (background)
+module Background.Egg exposing (Model, Msg(..), update, view)
 
 import List exposing (concat)
 import String exposing (fromInt)
@@ -7,7 +7,13 @@ import Svg.Attributes exposing (height, style, width, x1, x2, y1, y2)
 
 import ColorPalette exposing (ColorPalette)
 import Dimensions exposing (Dimensions)
-import Model exposing (Background)
+
+
+type alias Model =
+  { hide : Bool }
+
+
+type Msg = ToggleHide
 
 
 type alias OffsetFunction = Int -> Int
@@ -21,8 +27,15 @@ type alias OffsetFunctions =
   }
 
 
-background : Background -> ColorPalette -> Dimensions -> Svg msg
-background model palette dimensions =
+update : Msg -> Model -> Model
+update msg model =
+  case msg of
+    ToggleHide ->
+      { model | hide = not model.hide }
+
+
+view : Dimensions -> ColorPalette -> Model -> Svg Msg
+view dimensions palette model =
   svg
     [ width (fromInt dimensions.width)
     , height (fromInt dimensions.height)

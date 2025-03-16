@@ -6,8 +6,9 @@ import Platform.Cmd exposing (batch)
 import Url exposing (Url)
 import Task exposing (Task)
 
+import Background.Flowery exposing (initModel)
 import ColorPalette exposing (ColorPalette)
-import Model exposing (Model)
+import Model exposing (Background(..), Model)
 import Msg exposing (Msg(..))
 
 
@@ -26,7 +27,7 @@ model =
   , headline = "Software Engineer"
   , palette = palette
   , dimensions = { width = 0, height = 0 }
-  , background = { hide = True }
+  , background = FloweryBackground initModel
   }
 
 
@@ -41,6 +42,5 @@ init _ _ _ =
           }
         )
         Browser.Dom.getViewport
-    , Task.perform (always ToggleBackground) (Task.succeed ())
     ]
   )

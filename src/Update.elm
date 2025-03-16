@@ -1,6 +1,7 @@
 module Update exposing (update)
 
-import Model exposing (Model)
+import Background.Egg
+import Model exposing (Background(..), Model)
 import Msg exposing (Msg(..))
 
 
@@ -13,10 +14,12 @@ update msg model =
       ( { model | palette = palette }, Cmd.none )
     WindowResize dimensions ->
       ( { model | dimensions = dimensions }, Cmd.none )
-    ToggleBackground ->
-      let
-        background = model.background
-      in
-        ( { model | background = { background | hide = not background.hide } }
-        , Cmd.none
-        )
+    EggBackgroundMsg m ->
+      case model.background of
+        EggBackground bg ->
+          let
+            bg_ = Background.Egg.update m bg
+          in
+            ( { model | background = EggBackground bg_ }, Cmd.none )
+        _ ->
+          ( model, Cmd.none )

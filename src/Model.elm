@@ -1,10 +1,14 @@
-module Model exposing (Background, Model)
+module Model exposing (Background(..), Model)
 
+import Background.Egg
+import Background.Flowery
 import ColorPalette exposing (ColorPalette)
 import Dimensions exposing (Dimensions)
 
 
-type alias Background = { hide : Bool }
+type Background
+  = EggBackground Background.Egg.Model
+  | FloweryBackground Background.Flowery.Model
 
 
 type alias Model =
