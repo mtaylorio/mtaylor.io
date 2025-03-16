@@ -22,11 +22,62 @@ jobs:
         if-no-files-found: "error"
         retention-days: 1
         include-hidden-files: false
+  version:
+    name: "Assign Version"
+    runs-on: "mtaylorio-runners-k8s"
+    container:
+      image: "images.home.mtaylor.io/deployer:0.0.9"
+    outputs:
+      tag: "${{ steps.version.outputs.tag }}"
+    steps:
+    - name: "Checkout"
+      uses: "actions/checkout@v4"
+    - id: "version"
+      name: "Generate Version Tag"
+      run: |
+        set -eux
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git fetch origin 'refs/tags/*:refs/tags/*'
+        export tag=$(get-release-tag)
+        echo "tag=$tag" >> $GITHUB_OUTPUT
+  tag:
+    name: "Tag Repository"
+    runs-on: "mtaylorio-runners-k8s"
+    container:
+      image: "images.home.mtaylor.io/deployer:0.0.9"
+    needs:
+    - "build"
+    - "version"
+    outputs:
+      sha: "${{ steps.tag.outputs.sha }}"
+      tag: "${{ needs.version.outputs.tag }}"
+    steps:
+    - name: "Checkout"
+      uses: "actions/checkout@v4"
+    - id: tag
+      name: "Tag"
+      shell: "bash"
+      run: |
+        set -euxo pipefail
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git config --global user.email "githubactions@mtaylor.io"
+        git config --global user.name "GitHub Actions"
+        pushd deploy
+        kustomize edit set image images.home.mtaylor.io/mtaylor.io:${{ needs.version.outputs.tag }}
+        popd
+        git commit -a -m "Release ${{ needs.version.outputs.tag }}"
+        git tag -a ${{ needs.version.outputs.tag }} -m "Release ${{ needs.version.outputs.tag }}"
+        git push origin ${{ needs.version.outputs.tag }}
+        sha=$(git rev-parse --short HEAD)
+        echo "sha=$sha" >> $GITHUB_OUTPUT
   docker:
     name: "Build Docker Image"
     runs-on: "mtaylorio-runners-dind"
     needs:
-    - "build"
+    - "tag"
+    outputs:
+      sha: "${{ needs.tag.outputs.sha }}"
+      tag: "${{ needs.tag.outputs.tag }}"
     steps:
     - name: "Set up Docker Buildx"
       uses: "docker/setup-buildx-action@v3"
@@ -43,7 +94,9 @@ jobs:
       with:
         images: "images.home.mtaylor.io/mtaylor.io"
         tags: |
-          elm-rewrite
+          latest
+          ${{ needs.tag.outputs.tag }}
+          sha-${{ needs.tag.outputs.sha }}
     - name: "Docker Build"
       uses: "docker/build-push-action@v6"
       with:
@@ -51,3 +104,51 @@ jobs:
         context: "."
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+  release:
+    name: "Release"
+    environment: "production"
+    runs-on: "mtaylorio-runners-k8s"
+    container:
+      image: "images.home.mtaylor.io/deployer:0.0.9"
+    needs:
+    - "docker"
+    steps:
+    - name: "Checkout mtaylor.io"
+      uses: "actions/checkout@v4"
+      with:
+        path: "mtaylor.io"
+        ref: "refs/tags/${{ needs.docker.outputs.tag }}"
+    - name: "Checkout argocd-deployment"
+      uses: "actions/checkout@v4"
+      with:
+        path: "argocd-deployment"
+        ref: "main"
+        repository: "mtaylor91/argocd-deployment"
+        ssh-key: ${{ secrets.ARGOCD_DEPLOYMENT_SSH_PRIVATE_KEY }}
+    - name: "Update Release Branch"
+      shell: "bash"
+      run: |
+        set -euxo pipefail
+        git config --global user.email "githubactions@mtaylor.io"
+        git config --global user.name "GitHub Actions"
+        cd mtaylor.io
+        git push -f origin HEAD:release
+    - name: "Update argocd-deployment"
+      shell: "bash"
+      run: |
+        set -euxo pipefail
+        cd argocd-deployment
+        path=home/namespaced/mtaylor-io
+        repo=https://github.com/mtaylorio/mtaylor.io
+        ./bin/update-repo-tag.sh $path $repo ${{ needs.docker.outputs.tag }}
+        git commit -a -m "Update mtaylor.io to ${{ needs.docker.outputs.tag }}"
+        git push origin main
+    - name: "Sync argocd"
+      shell: "bash"
+      env:
+        ARGOCD_SERVER: "argocd.mtaylor.io"
+        ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      run: |
+        set -euxo pipefail
+        argocd app sync argocd/mtaylor-io --grpc-web
+        argocd app wait argocd/mtaylor-io --grpc-web --timeout 300 --health --sync
