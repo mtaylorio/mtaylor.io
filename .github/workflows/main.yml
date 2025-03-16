@@ -2,7 +2,7 @@ name: "Build"
 on:
   push:
     branches:
-    - "elm-rewrite"
+    - "main"
 jobs:
   build:
     name: "Build Source"
@@ -68,6 +68,7 @@ jobs:
         git commit -a -m "Release ${{ needs.version.outputs.tag }}"
         git tag -a ${{ needs.version.outputs.tag }} -m "Release ${{ needs.version.outputs.tag }}"
         git push origin ${{ needs.version.outputs.tag }}
+        git push origin main
         sha=$(git rev-parse --short HEAD)
         echo "sha=$sha" >> $GITHUB_OUTPUT
   docker:
