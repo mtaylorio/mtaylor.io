@@ -1,4 +1,4 @@
-module Background.Flowery exposing (Model, initModel, view)
+module Background.Flowery exposing (Model, Msg(..), initModel, update, view)
 
 import String exposing (fromInt)
 import Svg exposing (Svg, path, rect, svg)
@@ -16,16 +16,25 @@ type Node = Node
   }
 
 
-type alias Model = Node
+type alias Model = List Node
+
+
+type Msg
+  = NoOp
+  | Reset
 
 
 initModel : Model
-initModel =
-  Node
-    { root = Position 0 0
-    , split = Position 0 0
-    , branches = []
-    }
+initModel = []
+
+
+update : Msg -> Model -> Model
+update msg model =
+  case msg of
+    NoOp ->
+      model
+    Reset ->
+      initModel
 
 
 view : Dimensions -> ColorPalette -> Model -> Svg msg
@@ -40,7 +49,7 @@ view dimensions palette model = svg
       , fill <| palette.backgroundColor
       ]
       []
-    :: viewNodes dimensions palette model
+    :: List.concatMap (viewNodes dimensions palette) model
   )
 
 
